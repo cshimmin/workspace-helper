@@ -1,0 +1,107 @@
+# template for the thing.
+
+# dependent variables
+OBS(bb)::m_yy_bb[105,160]
+
+# convenience variable for the BG pdf:
+expr::t_bb('(m_yy_bb-100)/100',m_yy_bb)
+
+# the PoI
+POI::mu_signal[0,0,100]
+
+# lumi
+SYS::lumi[36.1]
+
+# some theory numbers
+BR_bb[0.575]
+BR_yy[0.00228]
+
+# single-higgs params
+# yield 1h ~0.577
+xs_1h_bb[0.0160]
+#expr::n_1h_bb('lumi*xs_1h_bb*2*BR_bb*BR_yy',lumi,xs_1h_bb,BR_bb,BR_yy)
+expr::n_1h_bb('lumi*xs_1h_bb',lumi,xs_1h_bb)
+
+# dihiggs signal params
+xs_sig[33.6]
+
+acc_sig_bb[0.1]
+expr::n_sig_bb('mu_signal*lumi*acc_sig_bb*xs_sig*2*BR_bb*BR_yy',mu_signal,lumi,acc_sig_bb,xs_sig,BR_bb,BR_yy)
+
+SYS::n_bias_bb[0]
+
+# higgs PDF variables
+SYS::m_higgs_bb[125.0]
+SYS::sigma_higgs_bb[1.7] # foo
+
+# variables for the bb background PDF
+n_bkg_bb[16,0,1000]
+c0_bkg[-1.039,-10,0]
+c1_bkg[-1.330,-10,0]
+
+
+# the PDFs
+#Exponential::pdf_bkg_bb(m_yy_bb,c0_bkg)
+EXPR::pdf_bkg_bb('exp(t_bb*(c0_bkg+c1_bkg*t_bb))',t_bb,c0_bkg,c1_bkg)
+
+# signal
+Gaussian::pdf_higgs_bb(m_yy_bb,m_higgs_bb,sigma_higgs_bb)
+
+# total PDF for all components
+MODEL(bb)::SUM::model_bb(n_bkg_bb*pdf_bkg_bb,n_1h_bb*pdf_higgs_bb,n_sig_bb*pdf_higgs_bb,n_bias_bb*pdf_higgs_bb)
+
+#PROD::model_bb_constr(model_bb,constraints)
+
+# jb category
+OBS(jb)::m_yy_jb[105,160]
+
+# convenience variable for the BG pdf:
+expr::t_jb('(m_yy_jb-100)/100',m_yy_jb)
+
+n_bkg_jb[93,0,5000]
+
+acc_sig_jb[0.1]
+expr::n_sig_jb('mu_signal*lumi*acc_sig_jb*xs_sig*2*BR_bb*BR_yy',mu_signal,lumi,acc_sig_jb,xs_sig,BR_bb,BR_yy)
+
+# yield 1h ~1.674
+xs_1h_jb[0.0464]
+expr::n_1h_jb('lumi*xs_1h_jb',lumi,xs_1h_jb)
+
+SYS::n_bias_jb[0]
+
+SYS::m_higgs_jb[125.0]
+SYS::sigma_higgs_jb[1.7]
+
+# 1h pdf
+Gaussian::pdf_higgs_jb(m_yy_jb,m_higgs_jb,sigma_higgs_jb)
+
+# bg pdf
+#Exponential::pdf_bkg_jb(m_yy_jb,c0_bkg)
+EXPR::pdf_bkg_jb('exp(t_jb*(c0_bkg+c1_bkg*t_jb))',t_jb,c0_bkg,c1_bkg)
+
+MODEL(jb)::SUM::model_jb(n_bkg_jb*pdf_bkg_jb,n_1h_jb*pdf_higgs_jb,n_sig_jb*pdf_higgs_jb,n_bias_jb*pdf_higgs_jb)
+
+
+# jj category
+OBS(jj)::m_yy_jj[105,160]
+
+# convenience variable for the BG pdf:
+expr::t_jj('(m_yy_jj-100)/100',m_yy_jj)
+
+n_bkg_jj[1320,0,5000]
+
+# yield 1h ~14.6
+xs_1h_jj[0.404]
+expr::n_1h_jj('lumi*xs_1h_jj',lumi,xs_1h_jj)
+
+SYS::m_higgs_jj[125.0]
+SYS::sigma_higgs_jj[1.7]
+
+# 1h pdf
+Gaussian::pdf_higgs_jj(m_yy_jj,m_higgs_jj,sigma_higgs_jj)
+
+# background pdf
+#Exponential::pdf_bkg_jj(m_yy_jj,c0_bkg)
+EXPR::pdf_bkg_jj('exp(t_jj*(c0_bkg+c1_bkg*t_jj))',t_jj,c0_bkg,c1_bkg)
+
+MODEL(jj)::SUM::model_jj(n_bkg_jj*pdf_bkg_jj,n_1h_jj*pdf_higgs_jj)
