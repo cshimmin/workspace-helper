@@ -1,0 +1,121 @@
+# resonant model, minimal example giving trouble with limits...
+# I have removed all systematics except the one on the background
+# normalization.
+
+# resonance mass... this can be set explicitly to whatever
+# value in the workspace before fitting
+mR[350]
+
+lumi[36.1]
+
+POI::mu_signal[1,0,500]
+
+# nominal signal XS
+xsec_signal[5000]
+
+# some theory numbers
+BR_bb[0.575]
+BR_yy[0.00228]
+
+
+
+#################
+##### 2 tag #####
+#################
+
+# 4-body mass observable for this category
+OBS(bb)::m_yy_bb[245,485]
+
+# signal shape params, using Leo's
+# parameterization vs. mR
+expr::GA_mu_bb('20.56 + 0.8691*mR + 2.055e-4 * mR * mR', mR)
+expr::GA_sigma_bb('-83.45 + 0.5328*mR - 7.261e-4 * mR * mR', mR)
+
+expr::CB_mu_bb('3.155 + 0.984*mR + 1.963e-5 * mR*mR', mR)
+expr::CB_sigma_bb('-47.54 + 0.3151*mR - 4.661e-4 * mR*mR', mR)
+
+expr::CB_frac_bb('1.137 - 0.0017 * mR', mR)
+expr::CB_alpha_bb('3.6 - 0.00229 * mR', mR)
+
+CB_n_bb[10.0]
+
+
+# also, just assume 10% signal efficiency for now...
+# (need to get this parameterized vs. mR)
+accXeff_bb[0.1]
+
+
+# signal PDF:
+# gaussian part
+Gaussian::pdf_sig_GA_bb(m_yy_bb, GA_mu_bb, GA_sigma_bb)
+# signal PDF
+CBShape::pdf_sig_CB_bb(m_yy_bb, CB_mu_bb, CB_sigma_bb, CB_alpha_bb, CB_n_bb)
+# total CB+gauss PDF:
+SUM::pdf_sig_bb(pdf_sig_GA_bb, CB_frac_bb*pdf_sig_CB_bb)
+
+
+# background shape params (assume constant here)
+bkg_peak_bb[271.8]
+bkg_tail_bb[-1.27]
+bkg_width_bb[34.9]
+
+# background PDF:
+Novosibirsk::pdf_bkg_bb(m_yy_bb, bkg_peak_bb, bkg_width_bb, bkg_tail_bb)
+
+
+# normalization terms:
+prod::n_sig_bb(lumi, mu_signal, accXeff_bb, 2, BR_yy, BR_bb, xsec_signal)
+
+#n_bkg_bb[17.09,0,500]
+SYS::n_bkg_bb[17.09]
+
+
+# combined S+B PDF:
+MODEL(bb)::SUM::model_bb(n_bkg_bb*pdf_bkg_bb, n_sig_bb*pdf_sig_bb)
+
+#################
+##### 1 tag #####
+#################
+
+OBS(jb)::m_yy_jb[245,485]
+
+# signal shape params, using Leo's
+# parameterization vs. mR
+expr::GA_mu_jb('27.04 + 0.828 * mR + 0.00027 * mR * mR', mR)
+expr::GA_sigma_jb('-172.8 + 1.105 * mR + -0.0016 * mR * mR', mR)
+
+expr::CB_mu_jb('12.16 + 0.927 * mR + 0.00011 * mR * mR', mR)
+expr::CB_sigma_jb('-11.68 + 0.071 * mR - 5.255e-5 * mR * mR', mR)
+
+expr::CB_alpha_jb('3.123 - 0.00076*mR', mR)
+expr::CB_frac_jb('0.9375 - 0.0016*mR', mR)
+
+CB_n_jb[10.0]
+
+# FIXME: need to get the right (parameterized) values for this
+accXeff_jb[0.1]
+
+
+# signal PDF:
+# gaussian part
+Gaussian::pdf_sig_GA_jb(m_yy_jb, GA_mu_jb, GA_sigma_jb)
+CBShape::pdf_sig_CB_jb(m_yy_jb, CB_mu_jb, CB_sigma_jb, CB_alpha_jb, CB_n_jb)
+# total CB+gauss PDF
+SUM::pdf_sig_jb(pdf_sig_GA_jb, CB_frac_jb*pdf_sig_CB_jb)
+
+
+# background shape params (assume constant here)
+bkg_peak_jb[271.8]
+bkg_tail_jb[-1.27]
+bkg_width_jb[34.9]
+
+# background PDF:
+Novosibirsk::pdf_bkg_jb(m_yy_jb, bkg_peak_jb, bkg_width_jb, bkg_tail_jb)
+
+# normalization terms:
+prod::n_sig_jb(lumi, mu_signal, accXeff_jb, 2, BR_yy, BR_bb, xsec_signal)
+
+#n_bkg_jb[94.66, 0, 500]
+SYS::n_bkg_jb[94.66]
+
+MODEL(jb)::SUM::model_jb(n_bkg_jb*pdf_bkg_jb, n_sig_jb*pdf_sig_jb)

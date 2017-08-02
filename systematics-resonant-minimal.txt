@@ -1,0 +1,3 @@
+# just the normalization systematics
+N_BKG_bb	logn	n_bkg_bb(0.215)
+N_BKG_jb	logn	n_bkg_jb(0.093)

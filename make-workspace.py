@@ -3,6 +3,7 @@
 import ROOT as r
 import sys
 import os
+import numpy as np
 
 if __name__ == "__main__":
     import argparse
@@ -31,24 +32,27 @@ if __name__ == "__main__":
             sys_name = items[0]
             sys_type = items[1]
 
-            sys_names.append(sys_name)
 
-            w.factory("NP_%s[-5,5]"%sys_name)
-            w.factory("GLOB_%s[0]"%sys_name)
 
-            if sys_type in ('gauss','bias'):
+            if sys_type in ('gauss','bias','logn'):
+                sys_names.append(sys_name)
+                print "making nuisance param: NP_%s"%sys_name
+                w.factory("NP_%s[-5,5]"%sys_name)
+                w.factory("GLOB_%s[0]"%sys_name)
                 w.factory("Gaussian::constr_{name}(NP_{name},GLOB_{name},1)".format(name=sys_name))
+                
+                for affected_param in items[2:]:
+                    assert affected_param.endswith(')')
+                    affected_param = affected_param[:-1]
+                    param_name,eff_size = affected_param.split('(')
+                    if not param_name in systematics:
+                        systematics[param_name] = []
+                    systematics[param_name].append((sys_name,float(eff_size),sys_type))
+
             else:
                 print>>sys.stderr, "Don't know how to handle systematic type: '%s'"%sys_type
                 sys.exit(1)
 
-            for effect in items[2:]:
-                assert effect.endswith(')')
-                effect = effect[:-1]
-                eff_name,eff_size = effect.split('(')
-                if not eff_name in systematics:
-                    systematics[eff_name] = []
-                systematics[eff_name].append((sys_name,float(eff_size),sys_type))
 
         new_definition = "PROD::constraints({})".format(",".join(["constr_%s"%c for c in sys_names]))
         res = w.factory(new_definition)
@@ -62,7 +66,7 @@ if __name__ == "__main__":
     observables = {}
     model_pdfs = {}
     poi_names = []
-    param_names = []
+    cparam_names = []
     for l in template_file:
         l = l.strip()
         #print "'%s'"%l
@@ -88,7 +92,7 @@ if __name__ == "__main__":
             if not token_name in systematics:
                 print>>sys.stderr, "Systematics requested for '%s', but none found!"%token_name
                 sys.exit(1)
-                
+
             # create a variable (suffixed with _nominal) to hold the nominal value
             new_definition = l.replace(token_name,"%s_nominal"%token_name)
             res = w.factory(new_definition)
@@ -96,16 +100,21 @@ if __name__ == "__main__":
                 print>>sys.stderr, "Error in line:"
                 print>>sys.stderr, new_definition
                 sys.exit(1)
+
             # add an expression that multiplies the nominal value by systematics
+            # (or adds the systematic in the case of a bias)
             bias_strs = []
             sys_strs = []
             np_names = []
             for sys_name,sys_size,sys_type in systematics[token_name]:
+                np_names.append("NP_%s"%sys_name)
                 if sys_type == 'bias':
                     bias_strs.append("%g*NP_%s"%(sys_size,sys_name))
-                else:
+                elif sys_type == 'gauss':
                     sys_strs.append("(1+%g*NP_%s)"%(sys_size,sys_name))
-                np_names.append("NP_%s"%sys_name)
+                elif sys_type == 'logn':
+                    sys_strs.append("exp(%g*NP_%s)"%(np.sqrt(1+sys_size**2),sys_name))
+
             sys_str = "*".join(sys_strs)
             # and define param as the product of the nominal and systematics
             if bias_strs and sys_strs:
@@ -134,7 +143,10 @@ if __name__ == "__main__":
                 assert mod_tag.endswith(")")
                 category = mod_tag[len("MODEL("):-1]
                 l = l[len(mod_tag)+2:]
-                token_name = l.split("::")[1].split('(')[0]
+                if '::' in l:
+                    token_name = l.split("::")[1].split('(')[0]
+                else:
+                    token_name = l
                 assert category not in model_pdfs
                 model_pdfs[category] = token_name
             elif l.startswith("POI::"):
@@ -144,7 +156,7 @@ if __name__ == "__main__":
             elif l.startswith("PARAM::"):
                 l = l[len("PARAM::"):]
                 token_name = l.split('[')[0]
-                param_names.append(token_name)
+                cparam_names.append(token_name)
 
             res = w.factory(l)
             if not res:
@@ -162,8 +174,14 @@ if __name__ == "__main__":
             obs = w.obj(obs_name)
 
             ds = r.RooDataSet("obsData_%s"%cat_name, "obsData_%s"%cat_name, r.RooArgSet(obs,wt), r.RooFit.WeightVar(wt))
-            for l in open(os.path.join(args.data,'%s.txt'%cat_name)):
-                x,y = map(float, l.split())
+            indata = np.loadtxt(os.path.join(args.data,'%s.txt'%cat_name))
+            if indata.ndim == 1:
+                # assume weights of 1.0
+                indata = np.vstack([indata, np.ones_like(indata)]).T
+            for x,y in indata:
+                # restrict to the range of the observable
+                if x<obs.getMin() or x>obs.getMax(): continue
+
                 obs.setVal(x)
                 wt.setVal(y)
                 ds.add(r.RooArgSet(obs,wt), y)
@@ -196,7 +214,8 @@ if __name__ == "__main__":
             print>>sys.stderr, new_definition
             sys.exit(1)
 
-    assert len(poi_names) == 1
+    #assert len(poi_names) == 1
+    assert len(poi_names) > 0
     poi = w.obj(poi_names[0])
 
     w.defineSet("observables", ",".join(['category']+observables.values()))
@@ -215,21 +234,18 @@ if __name__ == "__main__":
         if n.GetName() in sys_globs: continue
         if n.GetName() in sys_nps: continue
         if n.GetName() in poi_names: continue
-        if n.GetName() in param_names: continue
+        if n.GetName() in cparam_names: continue
         all_nps.append(n.GetName())
-
-    #w.defineSet("nuisanceParams", ",".join(all_nps))
-    #w.defineSet("globalObs", ",".join(sys_globs))
-    #w.defineSet("POIs", ",".join(poi_names))
 
     # setup the modelconfig
     mc.SetPdf(top_pdf)
     mc.SetParametersOfInterest(','.join(poi_names))
     mc.SetObservables(w.set("observables"))
     mc.SetNuisanceParameters(','.join(all_nps))
-    #mc.SetNuisanceParameters(','.join(sys_nps))
+    mc.SetConditionalObservables(','.join(cparam_names))
     mc.SetGlobalObservables(','.join(sys_globs))
     getattr(w,'import')(mc)
+
 
     # make asimov data in each category
     for cat_name,obs_name in observables.items():
@@ -243,20 +259,25 @@ if __name__ == "__main__":
         poi.setVal(poival_orig)
 
     ## and one for the simul pdf
-    #w.defineSet('observables_plus',','.join(['category']+observables.values()))
-    #observables_ = w.set("observables_plus")
-    #asimov = r.RooStats.AsymptoticCalculator.GenerateAsimovData(w.obj("pdf_combined"), observables_)
-    #asimov.SetName("xdata")
-    #getattr(w,'import')(asimov)
+    w.defineSet('observables_plus',','.join(['category']+observables.values()))
+    observables_ = w.set("observables_plus")
+    for muval in (0, 1):
+        poi.setVal(muval)
+        asimov = r.RooStats.AsymptoticCalculator.GenerateAsimovData(w.obj("pdf_combined"), observables_)
+        asimov.SetName("asimov_mu%d"%muval)
+        getattr(w,'import')(asimov)
     
     # merge the data in each cat into a indexed multi-cat dataset
     obs_vars = r.RooArgSet(*[w.obj(observables[c]) for c in category_names])
-    for dstype in ('obsData', 'asimov_mu0', 'asimov_mu1'):
+    #for dstype in ('obsData', 'asimov_mu0', 'asimov_mu1'):
+    for dstype in ('obsData',):
         ds_args = [r.RooFit.Index(w.obj("category"))]
         for cat_name in category_names:
             ds_args += [r.RooFit.Import(cat_name, w.obj("%s_%s"%(dstype,cat_name)))]
         ds_combined = r.RooDataSet(dstype, dstype, obs_vars, *ds_args)
         getattr(w,'import')(ds_combined)
+
+    #top_pdf.fitTo(w.obj("obsData"))
 
     w.Print()
 
