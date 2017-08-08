@@ -1,0 +1,134 @@
+# resonant model
+
+#CXX::ExpGaussExp
+
+mR[350]
+
+SYS::lumi[36.1]
+
+mu_signal[1]
+POI::xsec_signal[0,5000]
+
+# some theory numbers
+BR_bb[0.575]
+BR_yy[0.00228]
+
+
+#################
+##### 2 tag #####
+#################
+
+# 4-body mass observable for this category
+OBS(bb)::m_yy_bb[245,485]
+
+# signal shape params, using Leo's
+# parameterization vs. mR
+#expr::GA_mu_bb('20.56 + 0.8691*mR + 2.055e-4 * mR * mR', mR)
+#expr::GA_sigma_bb('-83.45 + 0.5328*mR - 7.261e-4 * mR * mR', mR)
+
+#expr::CB_mu_bb('3.155 + 0.984*mR + 1.963e-5 * mR*mR', mR)
+#expr::CB_sigma_bb('-47.54 + 0.3151*mR - 4.661e-4 * mR*mR', mR)
+
+#expr::CB_frac_bb('1.137 - 0.0017 * mR', mR)
+#expr::CB_alpha_bb('3.6 - 0.00229 * mR', mR)
+
+#CB_n_bb[10.0]
+
+
+# signal shape params, using James's parameterization
+expr::EGE_mu_bb('-4.713e-01 +1.002e+00*mR', mR)
+expr::EGE_sigma_bb('-7.618e+00 +4.086e-02*mR', mR)
+expr::EGE_kL_bb('+9.241e+00 -4.895e-02*mR +7.232e-05*mR*mR', mR)
+expr::EGE_kH_bb('+2.095e+00 -8.638e-03*mR +1.468e-05*mR*mR', mR)
+
+
+# signal selection accepatance*efficiency
+expr::accXeff_bb('(-0.06226 + 0.0006881*mR - 9.769e-7*mR*mR)*(0.93522+0.00007*mR)', mR)
+
+# signal PDF: (FIXME: change to the new signal model)
+# gaussian part
+#Gaussian::pdf_sig_GA_bb(m_yy_bb, GA_mu_bb, GA_sigma_bb)
+# signal PDF
+#CBShape::pdf_sig_CB_bb(m_yy_bb, CB_mu_bb, CB_sigma_bb, CB_alpha_bb, CB_n_bb)
+# total CB+gauss PDF:
+#SUM::pdf_sig_bb(pdf_sig_GA_bb, CB_frac_bb*pdf_sig_CB_bb)
+
+ExpGaussExp::pdf_sig_bb(m_yy_bb, EGE_mu_bb, EGE_sigma_bb, EGE_kL_bb, EGE_kH_bb)
+
+# background shape params (assume constant here)
+SYS::bkg_peak_bb[271.8]
+SYS::bkg_tail_bb[-1.27]
+SYS::bkg_width_bb[34.9]
+
+# background PDF:
+Novosibirsk::pdf_bkg_bb(m_yy_bb, bkg_peak_bb, bkg_width_bb, bkg_tail_bb)
+
+prod::n_sig_bb(lumi, accXeff_bb, 2, BR_bb, BR_yy, mu_signal, xsec_signal)
+
+SYS::n_bkg_bb[17.09]
+
+# combined S+B PDF:
+MODEL(bb)::SUM::model_bb(n_bkg_bb*pdf_bkg_bb, n_sig_bb*pdf_sig_bb)
+
+
+#################
+##### 1 tag #####
+#################
+OBS(jb)::m_yy_jb[245,485]
+
+# signal shape params, using Leo's
+# parameterization vs. mR
+#expr::GA_mu_jb('27.04 + 0.828 * mR + 0.00027 * mR * mR', mR)
+#expr::GA_sigma_jb('-172.8 + 1.105 * mR + -0.0016 * mR * mR', mR)
+
+#expr::CB_mu_jb('12.16 + 0.927 * mR + 0.00011 * mR * mR', mR)
+#expr::CB_sigma_jb('-11.68 + 0.071 * mR - 5.255e-5 * mR * mR', mR)
+
+#expr::CB_alpha_jb('3.123 - 0.00076*mR', mR)
+#expr::CB_frac_jb('0.9375 - 0.0016*mR', mR)
+
+
+
+# signal shape params, using James's parameterization
+expr::EGE_mu_jb('-2.276e+00 +1.009e+00*mR', mR)
+expr::EGE_sigma_jb('-1.006e+01 +5.024e-02*mR', mR)
+expr::EGE_kL_jb('+5.806e+00 -3.145e-02*mR +4.807e-05*mR*mR', mR)
+expr::EGE_kH_jb('-3.629e-01 +3.620e-03*mR -1.549e-06*mR*mR', mR)
+
+
+CB_n_jb[10.0]
+
+#accXeff_jb[0.1]
+expr::accXeff_jb('(0.06583-0.0001303*mR+4.161e-7*mR*mR)*(0.92771+0.00009*mR)', mR)
+
+
+# signal PDF:
+# gaussian part
+#Gaussian::pdf_sig_GA_jb(m_yy_jb, GA_mu_jb, GA_sigma_jb)
+#CBShape::pdf_sig_CB_jb(m_yy_jb, CB_mu_jb, CB_sigma_jb, CB_alpha_jb, CB_n_jb)
+# total CB+gauss PDF
+#SUM::pdf_sig_jb(pdf_sig_GA_jb, CB_frac_jb*pdf_sig_CB_jb)
+
+ExpGaussExp::pdf_sig_jb(m_yy_jb, EGE_mu_jb, EGE_sigma_jb, EGE_kL_jb, EGE_kH_jb)
+
+
+# background shape params (assume constant here)
+#bkg_peak_jb[271.8,250,320]
+#bkg_tail_jb[-1.27,-1.5,-1]
+#bkg_width_jb[34.9,20,50]
+
+SYS::bkg_peak_jb[271.8]
+SYS::bkg_tail_jb[-1.27]
+SYS::bkg_width_jb[34.9]
+
+# background PDF:
+Novosibirsk::pdf_bkg_jb(m_yy_jb, bkg_peak_jb, bkg_width_jb, bkg_tail_jb)
+
+# normalization terms:
+#prod::n_sig_jb(lumi, mu_signal, accXeff_jb, 2, BR_yy, BR_bb, xsec_signal)
+prod::n_sig_jb(lumi, accXeff_jb, 2, BR_bb, BR_yy, mu_signal, xsec_signal)
+
+#n_bkg_jb[94.66, 0, 500]
+SYS::n_bkg_jb[94.66]
+
+MODEL(jb)::SUM::model_jb(n_bkg_jb*pdf_bkg_jb, n_sig_jb*pdf_sig_jb)

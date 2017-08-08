@@ -1,0 +1,13 @@
+# systematics
+LUMI		logn	lumi(0.032)
+
+BKG_PEAK_bb	gauss	bkg_peak_bb(0.1258)
+BKG_TAIL_bb	gauss	bkg_tail_bb(0.2992)
+BKG_WIDTH_bb	gauss	bkg_width_bb(0.2275)
+
+BKG_PEAK_jb	gauss	bkg_peak_jb(0.1258)
+BKG_TAIL_jb	gauss	bkg_tail_jb(0.2992)
+BKG_WIDTH_jb	gauss	bkg_width_jb(0.2275)
+
+N_BKG_jb	logn	n_bkg_jb(0.093)
+N_BKG_bb	logn	n_bkg_bb(0.215)
