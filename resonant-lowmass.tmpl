@@ -1,0 +1,111 @@
+# resonant model, low mass
+
+mR[350]
+
+SYS::lumi[36.1]
+
+mu_signal[1]
+POI::xsec_signal[0,5000]
+
+# some theory numbers
+SYS::BR_bb[0.575]
+SYS::BR_yy[0.00228]
+
+
+#################
+##### 2 tag #####
+#################
+
+# 4-body mass observable for this category
+# TODO: is this still the fitting range we want to use?
+OBS(bb)::m_yy_bb[245,485]
+
+# signal shape params, using James's parameterization
+# note: systematics only on mu & sigma
+# TODO: make it so these can be loaded externally rather than hard-coded
+SYS::expr::EGE_mu_bb('-4.713e-01 +1.002e+00*mR', mR)
+SYS::expr::EGE_sigma_bb('-7.618e+00 +4.086e-02*mR', mR)
+expr::EGE_kL_bb('+9.241e+00 -4.895e-02*mR +7.232e-05*mR*mR', mR)
+expr::EGE_kH_bb('+2.095e+00 -8.638e-03*mR +1.468e-05*mR*mR', mR)
+
+# signal selection accepatance*efficiency
+# hard-coded numbers taken from support note...
+SYS::expr::accXeff_bb('(0.06583-0.0001303*mR+4.161e-7*mR*mR)*(0.92771+0.00009*mR)', mR)
+
+# total expected number of signal events
+prod::n_sig_bb(lumi, accXeff_bb, 2, BR_bb, BR_yy, mu_signal, xsec_signal)
+
+# spurious signal events
+SYS::n_bias_bb[0]
+
+# ExpGaussExp signal PDF
+ExpGaussExp::pdf_sig_bb(m_yy_bb, EGE_mu_bb, EGE_sigma_bb, EGE_kL_bb, EGE_kH_bb)
+
+# background shape params (constrained about their side-band predicted best-fit values)
+SYS::bkg_peak_bb[268]
+SYS::bkg_tail_bb[-1.72]
+SYS::bkg_width_bb[30.0]
+
+# background PDF:
+Novosibirsk::pdf_bkg_bb(m_yy_bb, bkg_peak_bb, bkg_width_bb, bkg_tail_bb)
+
+# number of BG events, constrained about side-band predicted best-fit value
+SYS::n_bkg_nonHiggs_bb[21.2]
+
+# TODO: add in the SM Higgs yields from MC!
+n_bkg_smHiggs_bb[0]
+
+# combined S+B PDF:
+# note: assuming nonHiggs and SM Higgs have the exact same BG shape?
+sum::n_bkg_bb(n_bkg_nonHiggs_bb, n_bkg_smHiggs_bb)
+MODEL(bb)::SUM::model_bb(n_bkg_bb*pdf_bkg_bb, n_sig_bb*pdf_sig_bb, n_bias_bb*pdf_sig_bb)
+
+
+
+#################
+##### 1 tag #####
+#################
+
+# 4-body mass observable for this category
+# TODO: is this still the fitting range we want to use?
+OBS(jb)::m_yy_jb[245,485]
+
+# signal shape params, using James's parameterization
+# note: systematics only on mu & sigma
+# TODO: make it so these can be loaded externally rather than hard-coded
+SYS::expr::EGE_mu_jb('-2.276e+00 +1.009e+00*mR', mR)
+SYS::expr::EGE_sigma_jb('-1.006e+01 +5.024e-02*mR', mR)
+expr::EGE_kL_jb('+5.806e+00 -3.145e-02*mR +4.807e-05*mR*mR', mR)
+expr::EGE_kH_jb('-3.629e-01 +3.620e-03*mR -1.549e-06*mR*mR', mR)
+
+# signal selection acceptance*efficiency
+# hard-coded numbers taken from support note...
+SYS::expr::accXeff_jb('(-0.06226 + 0.0006881*mR - 9.769e-7*mR*mR)*(0.93619+0.00006*mR)', mR)
+
+# total expected number of signal events
+prod::n_sig_jb(lumi, accXeff_jb, 2, BR_bb, BR_yy, mu_signal, xsec_signal)
+
+# spurious signal events
+SYS::n_bias_jb[0]
+
+# ExpGaussExp signal PDF
+ExpGaussExp::pdf_sig_jb(m_yy_jb, EGE_mu_jb, EGE_sigma_jb, EGE_kL_jb, EGE_kH_jb)
+
+# background shape params (constrained about their side-band predicted best-fit values)
+SYS::bkg_peak_jb[252]
+SYS::bkg_tail_jb[-2.7]
+SYS::bkg_width_jb[15]
+
+# background PDF:
+Novosibirsk::pdf_bkg_jb(m_yy_jb, bkg_peak_jb, bkg_width_jb, bkg_tail_jb)
+
+# number of BG events, constrained about side-band predicted best-fit value
+SYS::n_bkg_nonHiggs_jb[117.9]
+
+# TODO: add in the SM Higgs yields from MC!
+n_bkg_smHiggs_jb[0]
+
+# combined S+B PDF:
+# note: assuming nonHiggs and SM Higgs have the exact same BG shape?
+sum::n_bkg_jb(n_bkg_nonHiggs_jb, n_bkg_smHiggs_jb)
+MODEL(jb)::SUM::model_jb(n_bkg_jb*pdf_bkg_jb, n_sig_jb*pdf_sig_jb, n_bias_jb*pdf_sig_jb)

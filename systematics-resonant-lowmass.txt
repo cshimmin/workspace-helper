@@ -1,0 +1,58 @@
+# resonant model, low mass
+# NP_NAME	constraint_type		affected_parameter(magnitude) [affected_parameter(magnitude) ...]
+
+
+# data-driven constraints on BG shape:
+# note!! >100% uncertainty on tail+width parameters...
+BKG_PEAK_jb	gauss	bkg_peak_jb(0.302)
+BKG_TAIL_jb	gauss	bkg_tail_jb(2.45)
+BKG_WIDTH_jb	gauss	bkg_width_jb(1.87)
+
+BKG_PEAK_bb	gauss	bkg_peak_bb(0.333)
+BKG_TAIL_bb	gauss	bkg_tail_bb(5.92)
+BKG_WIDTH_bb	gauss	bkg_width_bb(8.73)
+
+# data-driven constraints on BG normalization
+N_BKG_jb	gauss	n_bkg_nonHiggs_jb(0.0496)
+N_BKG_bb	gauss	n_bkg_nonHiggs_bb(0.120)
+
+# lumi systematic, needs update I think?
+LUMI		logn	lumi(0.032)
+
+# theory uncertainties from yellow report @ mH=125.09
+# question? are these actually correlated (specifically the THU?)
+# TODO: these should probably be asymmetric...
+THU		gauss	BR_yy(0.0173)	BR_bb(0.0065)
+PUmq		gauss	BR_yy(0.0097)	BR_bb(0.0074)
+PUas		gauss	BR_yy(0.0066)	BR_bb(0.0079)
+
+# spurious signal
+# TODO: get the latest numbers for the ExpGaussExp BG (these are for Novosibirsk)
+BIAS_jb		bias	n_bias_jb(6.37)
+BIAS_bb		bias	n_bias_bb(0.92)
+
+# signal systematics
+# taken from Francesco's files... those are supposed to be in percent right?
+# TOOD: make this so we can load them from the external file, rather than hard-code
+
+# shape uncertainty for signal peak
+PES		gauss	EGE_mu_jb(0.001582745)	EGE_mu_bb(0.00250999)
+
+# shape uncertainties for signal widths
+BTag_bjets	gauss	EGE_sigma_jb(0.0111251)	# missing for 2tag?
+JES		gauss	EGE_sigma_jb(0.042082)	EGE_sigma_bb(0.02038555)
+JER		gauss	EGE_sigma_jb(0.108129)	EGE_sigma_bb(0.0498862)
+PER		gauss	EGE_sigma_jb(1.571065)	EGE_sigma_bb(0.01329905)
+PES		gauss	EGE_sigma_jb(0.0439963)	EGE_sigma_bb(0.008905765)
+PRW		gauss	EGE_sigma_jb(0.0266895)	EGE_sigma_bb(0.013807205)
+
+# yield uncertainties for signal
+BTag_bjets	gauss	accXeff_jb(0.0264482)	accXeff_bb(0.03406355)
+JES		gauss	accXeff_jb(0.03276895)	accXeff_bb(0.02972445)
+JER		gauss	accXeff_jb(0.0850153)	accXeff_bb(0.0754453)
+PER		gauss	accXeff_jb(0.0126221)	accXeff_bb(1.0275235)
+PES		gauss	accXeff_jb(0.03032245)	accXeff_bb(0.00918535)
+PH_ID		gauss	accXeff_jb(0.0260106)	accXeff_bb(0.02583555)
+PH_ISO		gauss	accXeff_jb(0.00768717)	accXeff_bb(0.00755254)
+PRW		gauss	accXeff_jb(0.04178045)	accXeff_bb(0.04046845)
+

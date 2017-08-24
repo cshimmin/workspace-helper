@@ -1,0 +1,43 @@
+# resonant model, high mass
+# NP_NAME	constraint_type		affected_parameter(magnitude) [affected_parameter(magnitude) ...]
+
+# data-driven constraints on BG normalization
+N_BKG_jb	gauss	n_bkg_nonHiggs_jb(0.141)
+N_BKG_bb	gauss	n_bkg_nonHiggs_bb(0.244)
+
+# lumi systematic, needs update I think?
+LUMI		logn	lumi(0.032)
+
+# theory uncertainties from yellow report @ mH=125.09
+# question? are these actually correlated (specifically the THU?)
+# TODO: these should probably be asymmetric...
+THU		gauss	BR_yy(0.0173)	BR_bb(0.0065)
+PUmq		gauss	BR_yy(0.0097)	BR_bb(0.0074)
+PUas		gauss	BR_yy(0.0066)	BR_bb(0.0079)
+
+# spurious signal
+# TODO: get the latest numbers for the ExpGaussExp BG (these are for Novosibirsk)
+BIAS_jb		bias	n_bias_jb(0.5)
+BIAS_bb		bias	n_bias_bb(0.38)
+
+# shape uncertainty for signal peak
+PES		gauss	EGE_mu_jb(0.002624035)	EGE_mu_bb(0.003132925)
+
+# shape uncertainties for signal widths
+BTag_bjets	gauss	EGE_sigma_jb(0.0069759)	# missing?
+JES		gauss	EGE_sigma_jb(0.0464545)	EGE_sigma_bb(0.03218645)
+JER		gauss	EGE_sigma_jb(0.0554032)	EGE_sigma_bb(0.0595669)
+PER		gauss	EGE_sigma_jb(0.0112259)	EGE_sigma_bb(0.01147604)
+PES		gauss	EGE_sigma_jb(0.0289584) EGE_sigma_bb(0.01105575)
+PRW		gauss	EGE_sigma_jb(0.0164369)	EGE_sigma_bb(0.01414825)
+
+# yield uncertainties for signal
+BTag_bjets	gauss	accXeff_jb(0.0264023)	accXeff_bb(0.02496185)
+JES		gauss	accXeff_jb(0.03443025)	accXeff_bb(0.0226523)
+JER		gauss	accXeff_jb(0.0637878)	accXeff_bb(0.0644196)
+PER		gauss	accXeff_jb(0.011824125)	accXeff_bb(0.0181708)
+PES		gauss	accXeff_jb(0.02416935)	accXeff_bb(0.00875055)
+PH_ID		gauss	accXeff_jb(0.0246323)	accXeff_bb(0.0246309)
+PH_ISO		gauss	accXeff_jb(0.008981895)	accXeff_bb(0.00933833)
+PRW		gauss	accXeff_jb(0.0379018)	accXeff_bb(0.04049785)
+
