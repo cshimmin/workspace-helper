@@ -42,7 +42,7 @@ PES		gauss	EGE_mu_jb(0.001582745)	EGE_mu_bb(0.00250999)
 BTag_bjets	gauss	EGE_sigma_jb(0.0111251)	# missing for 2tag?
 JES		gauss	EGE_sigma_jb(0.042082)	EGE_sigma_bb(0.02038555)
 JER		gauss	EGE_sigma_jb(0.108129)	EGE_sigma_bb(0.0498862)
-PER		gauss	EGE_sigma_jb(1.571065)	EGE_sigma_bb(0.01329905)
+PER		gauss	EGE_sigma_jb(0.0157107)	EGE_sigma_bb(0.01329905)
 PES		gauss	EGE_sigma_jb(0.0439963)	EGE_sigma_bb(0.008905765)
 PRW		gauss	EGE_sigma_jb(0.0266895)	EGE_sigma_bb(0.013807205)
 
