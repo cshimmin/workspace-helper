@@ -16,8 +16,6 @@ if __name__ == "__main__":
     parser.add_argument("model_template", help="the model workspace template to load")
     args = parser.parse_args()
 
-    r.gInterpreter.ProcessLine(".L ExpGaussExp.cxx+")
-
     w = r.RooWorkspace("workspace")
 
     mc = r.RooStats.ModelConfig("ModelConfig", w)
@@ -84,7 +82,7 @@ if __name__ == "__main__":
             if not load_result == 0:
                 print>>sys.stderr, "Error loading file: %s" % cxxfile
                 sys.exit(1)
-            w.importClassCode(getattr(r,classname).Class(), True)
+            #w.importClassCode(getattr(r,classname).Class(), True)
         elif l.startswith("SYS::"):
             l = l[len("SYS::"):]
             
@@ -293,6 +291,7 @@ if __name__ == "__main__":
 
     #top_pdf.fitTo(w.obj("obsData"))
 
+    w.importClassCode("*")
     w.Print()
 
     if args.out:
