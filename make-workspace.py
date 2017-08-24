@@ -16,6 +16,8 @@ if __name__ == "__main__":
     parser.add_argument("model_template", help="the model workspace template to load")
     args = parser.parse_args()
 
+    r.gInterpreter.ProcessLine(".L ExpGaussExp.cxx+")
+
     w = r.RooWorkspace("workspace")
 
     mc = r.RooStats.ModelConfig("ModelConfig", w)
@@ -57,7 +59,7 @@ if __name__ == "__main__":
         new_definition = "PROD::constraints({})".format(",".join(["constr_%s"%c for c in sys_names]))
         res = w.factory(new_definition)
         if not res:
-            print>>sys.stderr, "Error in line:"
+            print>>sys.stderr, "Error on L%d:"%(line_number + 1)
             print>>sys.stderr, new_definition
             sys.exit(1)
 
@@ -67,16 +69,28 @@ if __name__ == "__main__":
     model_pdfs = {}
     poi_names = []
     cparam_names = []
-    for l in template_file:
+    for line_number,l in enumerate(template_file):
         l = l.strip()
         #print "'%s'"%l
         if not l or l.startswith("#"): continue
         l = l.split('#')[0]
 
-        if l.startswith("SYS::"):
+        if l.startswith("CXX::"):
+            # load in a CXX file requested as a dependence
+            classname = l.split("::")[1]
+            cxxfile = classname + ".cxx"
+            print "Loading dependency: %s" % cxxfile
+            load_result = r.gInterpreter.ProcessLine(".L %s+"%cxxfile)
+            if not load_result == 0:
+                print>>sys.stderr, "Error loading file: %s" % cxxfile
+                sys.exit(1)
+            w.importClassCode(getattr(r,classname).Class(), True)
+        elif l.startswith("SYS::"):
             l = l[len("SYS::"):]
             
             token_name=l.split('(')[0].split('[')[0]
+            if '::' in token_name:
+                token_name = token_name.split('::')[1]
 
             systematic_available = token_name in systematics
 
@@ -84,7 +98,7 @@ if __name__ == "__main__":
                 print "Note: Ignoring systematics for '%s'"%token_name
                 res = w.factory(l)
                 if not res:
-                    print>>sys.stderr, "Error in line:"
+                    print>>sys.stderr, "Error on L%d:"%(line_number+1)
                     print>>sys.stderr, l
                     sys.exit(1)
                 continue
@@ -97,7 +111,7 @@ if __name__ == "__main__":
             new_definition = l.replace(token_name,"%s_nominal"%token_name)
             res = w.factory(new_definition)
             if not res:
-                print>>sys.stderr, "Error in line:"
+                print>>sys.stderr, "Error on L%d:"%(line_number+1)
                 print>>sys.stderr, new_definition
                 sys.exit(1)
 
@@ -125,7 +139,7 @@ if __name__ == "__main__":
                 new_definition = "expr::{name}('{name}_nominal*{systs}',{name}_nominal,{np_names})".format(name=token_name,systs=sys_str,np_names=','.join(np_names))
             res = w.factory(new_definition)
             if not res:
-                print>>sys.stderr, "Error in line:"
+                print>>sys.stderr, "Error on L%d:"%(line_number+1)
                 print>>sys.stderr, new_definition
                 sys.exit(1)
             print new_definition
@@ -160,7 +174,7 @@ if __name__ == "__main__":
 
             res = w.factory(l)
             if not res:
-                print>>sys.stderr, "Error in line:"
+                print>>sys.stderr, "Error on L%d:"%(line_number+1)
                 print>>sys.stderr, l
                 sys.exit(1)
 
@@ -197,7 +211,7 @@ if __name__ == "__main__":
     new_definition = "category[%s]"%(','.join(category_names))
     res = w.factory(new_definition)
     if not res:
-        print>>sys.stderr, "Error in line:"
+        print>>sys.stderr, "Error on L%d:"%(line_number+1)
         print>>sys.stderr, new_definition
         sys.exit(1)
 
@@ -210,7 +224,7 @@ if __name__ == "__main__":
         new_definition = "PROD::pdf_constr(pdf_combined,constraints)"
         top_pdf = w.factory(new_definition)
         if not top_pdf:
-            print>>sys.stderr, "Error in line:"
+            print>>sys.stderr, "Error on L%d:"%(line_number+1)
             print>>sys.stderr, new_definition
             sys.exit(1)
 
