@@ -41,8 +41,7 @@ SYS::n_bias_bb[0]
 ExpGaussExp::pdf_sig_bb(m_yy_bb, EGE_mu_bb, EGE_sigma_bb, EGE_kL_bb, EGE_kH_bb)
 
 # background slope param (UNCONSTRAINED in the high-mass fit)
-# TODO: get reasonable guesses for "nominal" shape? for now, taken from 0-tag data
-bkg_slope_bb[-0.006,-0.1,0]
+bkg_slope_bb[-4.57e-3,-0.1,0]
 
 # background PDF:
 Exponential::pdf_bkg_bb(m_yy_bb, bkg_slope_bb)
@@ -86,8 +85,7 @@ SYS::n_bias_jb[0]
 ExpGaussExp::pdf_sig_jb(m_yy_jb, EGE_mu_jb, EGE_sigma_jb, EGE_kL_jb, EGE_kH_jb)
 
 # background slope param (UNCONSTRAINED in the high-mass fit)
-# TODO: get reasonable guesses for "nominal" shape? for now, taken from 0-tag data
-bkg_slope_jb[-0.006,-0.1,0]
+bkg_slope_jb[-5.49e-3,-0.1,0]
 
 # background PDF:
 Exponential::pdf_bkg_jb(m_yy_jb, bkg_slope_jb)
