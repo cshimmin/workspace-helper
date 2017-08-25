@@ -22,11 +22,10 @@ OBS(bb)::m_yy_bb[335,1140]
 
 # signal shape params, using James's parameterization
 # note: systematics only on mu & sigma
-# FIXME: these are from low mass selection, needs update to high mass
-SYS::expr::EGE_mu_bb('-4.713e-01 +1.002e+00*mR', mR)
-SYS::expr::EGE_sigma_bb('-7.618e+00 +4.086e-02*mR', mR)
-expr::EGE_kL_bb('+9.241e+00 -4.895e-02*mR +7.232e-05*mR*mR', mR)
-expr::EGE_kH_bb('+2.095e+00 -8.638e-03*mR +1.468e-05*mR*mR', mR)
+SYS::expr::EGE_mu_bb('+4.000e+00 +9.926e-01*mR', mR)
+SYS::expr::EGE_sigma_bb('TMath::Max(TMath::Min(-7.705e-01 +2.231e-02*mR,6.0),18.0)', mR)
+expr::EGE_kL_bb('TMath::Max(TMath::Min(+5.178e+01 +1.768e-02*mR +1.923e-04*mR*mR,0.1),1.5)', mR)
+expr::EGE_kH_bb('TMath::Max(TMath::Min(-1.327e-01 +3.986e-03*mR -3.065e-06*mR*mR,0.1),1.0)', mR)
 
 # signal selection acceptace*efficiency
 # hard-coded numbers taken from support note...
@@ -68,11 +67,10 @@ OBS(jb)::m_yy_jb[335,1140]
 
 # signal shape params, using James's parameterization
 # note: systematics only on mu & sigma
-# FIXME: these are from low mass selection, needs update to high mass
-SYS::expr::EGE_mu_jb('-2.276e+00 +1.009e+00*mR', mR)
-SYS::expr::EGE_sigma_jb('-1.006e+01 +5.024e-02*mR', mR)
-expr::EGE_kL_jb('+5.806e+00 -3.145e-02*mR +4.807e-05*mR*mR', mR)
-expr::EGE_kH_jb('-3.629e-01 +3.620e-03*mR -1.549e-06*mR*mR', mR)
+SYS::expr::EGE_mu_jb('+4.000e+00 +9.921e-01*mR', mR)
+SYS::expr::EGE_sigma_jb('TMath::Max(TMath::Min(-9.049e-01 +2.391e-02*mR,6.0),18.0)', mR)
+expr::EGE_kL_jb('TMath::Max(TMath::Min(+2.041e+01 -8.589e-02*mR +9.458e-05*mR*mR,0.1),1.5)', mR)
+expr::EGE_kH_jb('TMath::Max(TMath::Min(+6.898e-01 +4.664e-04*mR -4.617e-07*mR*mR,0.1),1.0)', mR)
 
 # signal selection acceptace*efficiency
 # hard-coded numbers taken from support note...
