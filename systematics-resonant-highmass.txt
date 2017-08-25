@@ -15,6 +15,11 @@ THU		gauss	BR_yy(0.0173)	BR_bb(0.0065)
 PUmq		gauss	BR_yy(0.0097)	BR_bb(0.0074)
 PUas		gauss	BR_yy(0.0066)	BR_bb(0.0079)
 
+# single-higgs systematics
+HIGGS_HF	gauss	n_perFb_bkg_smHiggs_jb(0.1967)	n_perFb_bkg_smHiggs_bb(0.1329)
+HIGGS_SCALE	gauss	n_perFb_bkg_smHiggs_jb(0.0656)	n_perFb_bkg_smHiggs_bb(0.0570)
+HIGGS_QCD	gauss	n_perFb_bkg_smHiggs_jb(0.0259)	n_perFb_bkg_smHiggs_bb(0.0225)
+
 # spurious signal
 BIAS_jb		bias	n_bias_jb(0.69)
 BIAS_bb		bias	n_bias_bb(0.22)

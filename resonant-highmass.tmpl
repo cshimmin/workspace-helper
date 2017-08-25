@@ -49,8 +49,8 @@ Exponential::pdf_bkg_bb(m_yy_bb, bkg_slope_bb)
 # number of BG events, constrained about side-band predicted best-fit value
 SYS::n_bkg_nonHiggs_bb[4.71]
 
-# TODO: add in the SM Higgs yields from MC!
-n_bkg_smHiggs_bb[0]
+SYS::n_perFb_smHiggs_bb[0.01959]
+prod::n_bkg_smHiggs_bb(lumi,n_perFb_smHiggs_bb)
 
 # combined S+B PDF:
 sum::n_bkg_bb(n_bkg_nonHiggs_bb, n_bkg_smHiggs_bb)
@@ -93,8 +93,8 @@ Exponential::pdf_bkg_jb(m_yy_jb, bkg_slope_jb)
 # number of BG events, constrained about side-band predicted best-fit value
 SYS::n_bkg_nonHiggs_jb[17.23]
 
-# TODO: add in the SM Higgs yields from MC!
-n_bkg_smHiggs_jb[0]
+SYS::n_perFb_smHiggs_jb[0.04767]
+prod::n_bkg_smHiggs_jb(lumi,n_perFb_smHiggs_jb)
 
 # combined S+B PDF:
 sum::n_bkg_jb(n_bkg_nonHiggs_jb, n_bkg_smHiggs_jb)
