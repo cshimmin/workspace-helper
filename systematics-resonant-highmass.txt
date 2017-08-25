@@ -16,9 +16,8 @@ PUmq		gauss	BR_yy(0.0097)	BR_bb(0.0074)
 PUas		gauss	BR_yy(0.0066)	BR_bb(0.0079)
 
 # spurious signal
-# TODO: get the latest numbers for the ExpGaussExp BG (these are for Novosibirsk)
-BIAS_jb		bias	n_bias_jb(0.5)
-BIAS_bb		bias	n_bias_bb(0.38)
+BIAS_jb		bias	n_bias_jb(0.69)
+BIAS_bb		bias	n_bias_bb(0.22)
 
 # shape uncertainty for signal peak
 PES		gauss	EGE_mu_jb(0.002624035)	EGE_mu_bb(0.003132925)

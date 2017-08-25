@@ -27,9 +27,8 @@ PUmq		gauss	BR_yy(0.0097)	BR_bb(0.0074)
 PUas		gauss	BR_yy(0.0066)	BR_bb(0.0079)
 
 # spurious signal
-# TODO: get the latest numbers for the ExpGaussExp BG (these are for Novosibirsk)
-BIAS_jb		bias	n_bias_jb(6.37)
-BIAS_bb		bias	n_bias_bb(0.92)
+BIAS_jb		bias	n_bias_jb(2.01)
+BIAS_bb		bias	n_bias_bb(0.80)
 
 # signal systematics
 # taken from Francesco's files... those are supposed to be in percent right?
