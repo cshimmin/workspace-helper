@@ -13,6 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--data", help="path containing observed data to fit to")
     parser.add_argument("--out", help="File to save the workspace to.")
     parser.add_argument("--systematics", help="file containing the systematics for each parameter")
+    parser.add_argument("--stat-only", action="store_true", help="Do stat-only limits (set NPs and GLOBs to constant)")
     parser.add_argument("model_template", help="the model workspace template to load")
     args = parser.parse_args()
 
@@ -35,11 +36,12 @@ if __name__ == "__main__":
 
 
             if sys_type in ('gauss','bias','logn'):
-                sys_names.append(sys_name)
-                print "making nuisance param: NP_%s"%sys_name
-                w.factory("NP_%s[-5,5]"%sys_name)
-                w.factory("GLOB_%s[0]"%sys_name)
-                w.factory("Gaussian::constr_{name}(NP_{name},GLOB_{name},1)".format(name=sys_name))
+                if not sys_name in sys_names:
+                    sys_names.append(sys_name)
+                    print "making nuisance param: NP_%s"%sys_name
+                    w.factory("NP_%s[-5,5]"%sys_name)
+                    w.factory("GLOB_%s[-5,5]"%sys_name)
+                    w.factory("Gaussian::constr_{name}(NP_{name},GLOB_{name},1)".format(name=sys_name))
                 
                 for affected_param in items[2:]:
                     assert affected_param.endswith(')')
@@ -125,7 +127,7 @@ if __name__ == "__main__":
                 elif sys_type == 'gauss':
                     sys_strs.append("(1+%g*NP_%s)"%(sys_size,sys_name))
                 elif sys_type == 'logn':
-                    sys_strs.append("exp(%g*NP_%s)"%(np.sqrt(1+sys_size**2),sys_name))
+                    sys_strs.append("exp(%g*NP_%s)"%(np.sqrt(np.log(1+sys_size**2)),sys_name))
 
             sys_str = "*".join(sys_strs)
             # and define param as the product of the nominal and systematics
@@ -199,12 +201,17 @@ if __name__ == "__main__":
                 ds.add(r.RooArgSet(obs,wt), y)
             getattr(w,'import')(ds)
     else:
+        # generate datasets, with PoI set to zero
+        poi = w.obj(poi_names[0])
+        poival_orig = poi.getVal()
+        poi.setVal(0)
         for cat_name in category_names:
             obs = w.obj(observables[cat_name])
             pdf = w.obj(model_pdfs[cat_name])
             ds = pdf.generate(r.RooArgSet(obs))
             ds.SetName("obsData_%s"%cat_name)
             getattr(w,'import')(ds)
+        poi.setVal(poival_orig)
 
     new_definition = "category[%s]"%(','.join(category_names))
     res = w.factory(new_definition)
@@ -236,9 +243,10 @@ if __name__ == "__main__":
     sys_globs = ["GLOB_%s"%s for s in sys_names]
 
     # find nuisance params other than the ones associated w/ systematics
-    all_nps = sys_nps[:]
+    #all_nps = sys_nps[:]
     pdf_vars = top_pdf.getParameters(w.set("observables"))
     itr = pdf_vars.createIterator()
+    other_nps = []
     while True:
         n = itr.Next()
         if not n: break
@@ -247,16 +255,26 @@ if __name__ == "__main__":
         if n.GetName() in sys_nps: continue
         if n.GetName() in poi_names: continue
         if n.GetName() in cparam_names: continue
-        all_nps.append(n.GetName())
+        other_nps.append(n.GetName())
+
+    all_nps = sys_nps + other_nps
 
     # setup the modelconfig
     mc.SetPdf(top_pdf)
     mc.SetParametersOfInterest(','.join(poi_names))
     mc.SetObservables(w.set("observables"))
-    mc.SetNuisanceParameters(','.join(all_nps))
-    mc.SetConditionalObservables(','.join(cparam_names))
-    mc.SetGlobalObservables(','.join(sys_globs))
+    if args.stat_only:
+        if other_nps:
+            mc.SetNuisanceParameters(','.join(other_nps))
+    else:
+        mc.SetNuisanceParameters(','.join(all_nps))
+        mc.SetGlobalObservables(','.join(sys_globs))
+    #mc.SetConditionalObservables(','.join(cparam_names))
     getattr(w,'import')(mc)
+
+    if args.stat_only:
+        for v in sys_nps+sys_globs:
+            w.obj(v).setConstant(True)
 
 
     # make asimov data in each category
@@ -273,11 +291,13 @@ if __name__ == "__main__":
     ## and one for the simul pdf
     w.defineSet('observables_plus',','.join(['category']+observables.values()))
     observables_ = w.set("observables_plus")
+    poival_orig = poi.getVal()
     for muval in (0, 1):
         poi.setVal(muval)
         asimov = r.RooStats.AsymptoticCalculator.GenerateAsimovData(w.obj("pdf_combined"), observables_)
         asimov.SetName("asimov_mu%d"%muval)
         getattr(w,'import')(asimov)
+    poi.setVal(poival_orig)
     
     # merge the data in each cat into a indexed multi-cat dataset
     obs_vars = r.RooArgSet(*[w.obj(observables[c]) for c in category_names])

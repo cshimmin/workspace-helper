@@ -86,7 +86,7 @@ int initialFit = -1;                     // do a first  fit to the model (-1 : d
 int randomSeed = -1;                     // random seed (if = -1: use default value, if = 0 always random )
                                          // NOTE: Proof uses automatically a random seed
 
-int nAsimovBins = 0;                     // number of bins in observables used for Asimov data sets (0 is the default and it is given by workspace, typically is 100)
+int nAsimovBins = 1000;                     // number of bins in observables used for Asimov data sets (0 is the default and it is given by workspace, typically is 100)
 
 bool reuseAltToys = false;                // reuse same toys for alternate hypothesis (if set one gets more stable bands)
 double confidenceLevel = 0.95;            // confidence level value
@@ -97,7 +97,7 @@ std::string massValue = "";              // extra string to tag output file of r
 std::string  minimizerType = "";                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
 int   printLevel = 0;                    // print level for debugging PL test statistics and calculators
 
-bool useNLLOffset = false;               // use NLL offset when fitting (this increase stability of fits) 
+bool useNLLOffset = true;               // use NLL offset when fitting (this increase stability of fits) 
 
 
 // internal class to run the inverter and more
@@ -273,11 +273,12 @@ StandardHypoTestInvDemo(const char * infile = 0,
                         int calculatorType = 0,
                         int testStatType = 0,
                         bool useCLs = true ,
-			double mR = 350,
+                        double mR = 350,
                         int npoints = 6,
                         double poimin = 0,
                         double poimax = 5,
                         int ntoys=1000,
+                        bool doStatOnly = false,
                         bool useNumberCounting = false,
                         const char * nuisPriorName = 0){
 /*
@@ -328,6 +329,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
 
 
 
+   noSystematics = doStatOnly;
    TString filename(infile);
    if (filename.IsNull()) {
       filename = "results/example_combined_GaussExample_model.root";
