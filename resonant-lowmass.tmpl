@@ -6,7 +6,7 @@ mR[350]
 SYS::lumi[36.1]
 
 mu_signal[1]
-POI::xsec_signal[0,5000]
+POI::xsec_signal[0,10000]
 
 #POI::mu_signal[0,1]
 #xsec_signal[5000]
@@ -63,10 +63,12 @@ SYS::n_bkg_nonHiggs_bb[21.2]
 SYS::n_perFb_bkg_smHiggs_bb[0.0683]
 prod::n_bkg_smHiggs_bb(lumi,n_perFb_bkg_smHiggs_bb)
 
+EXPR::pdf_const_bb('1', m_yy_bb)
+
 # combined S+B PDF:
 # note: assuming nonHiggs and SM Higgs have the exact same BG shape?
 sum::n_bkg_bb(n_bkg_nonHiggs_bb, n_bkg_smHiggs_bb)
-MODEL(bb)::SUM::model_bb(n_bkg_bb*pdf_bkg_bb, n_sig_bb*pdf_sig_bb, n_bias_bb*pdf_sig_bb)
+MODEL(bb)::SUM::model_bb(n_bkg_bb*pdf_bkg_bb, n_sig_bb*pdf_sig_bb, n_bias_bb*pdf_sig_bb, 1e-6*pdf_const_bb)
 
 
 
@@ -117,7 +119,9 @@ SYS::n_bkg_nonHiggs_jb[117.9]
 SYS::n_perFb_bkg_smHiggs_jb[0.1571]
 prod::n_bkg_smHiggs_jb(lumi,n_perFb_bkg_smHiggs_jb)
 
+EXPR::pdf_const_jb('1', m_yy_jb)
+
 # combined S+B PDF:
 # note: assuming nonHiggs and SM Higgs have the exact same BG shape?
 sum::n_bkg_jb(n_bkg_nonHiggs_jb, n_bkg_smHiggs_jb)
-MODEL(jb)::SUM::model_jb(n_bkg_jb*pdf_bkg_jb, n_sig_jb*pdf_sig_jb, n_bias_jb*pdf_sig_jb)
+MODEL(jb)::SUM::model_jb(n_bkg_jb*pdf_bkg_jb, n_sig_jb*pdf_sig_jb, n_bias_jb*pdf_sig_jb, 1e-6*pdf_const_jb)

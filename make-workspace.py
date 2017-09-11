@@ -5,6 +5,28 @@ import sys
 import os
 import numpy as np
 
+def factory(w, expr, line_no=None):
+    res = w.factory(expr)
+    if not res:
+        if line_non is not None:
+            print>>sys.stderr, "Error on L%d"%(line_number)
+        else:
+            print>>sys.stderr, "Error processing line"
+        print>>sys.stderr, expr
+        sys.exit(1)
+    return res
+
+def iterset(varset):
+    itr = varset.createIterator()
+    while True:
+        x = itr.Next()
+        if not x: break
+        yield x
+
+def set_const(varset, const=True):
+    for x in iterset(varset):
+        x.setConstant(const)
+
 if __name__ == "__main__":
     import argparse
 
@@ -14,12 +36,16 @@ if __name__ == "__main__":
     parser.add_argument("--out", help="File to save the workspace to.")
     parser.add_argument("--systematics", help="file containing the systematics for each parameter")
     parser.add_argument("--stat-only", action="store_true", help="Do stat-only limits (set NPs and GLOBs to constant)")
+    parser.add_argument("--wsname", default="workspace", help="The name of the workspace to create")
+    parser.add_argument("--mcname", default="ModelConfig", help="The name of the model config to create")
+    parser.add_argument("--profiledata", action="store_true", help="do an initial background-only fit to the data")
+    parser.add_argument("--injection", default=[], action="append", help="Signal injection point to append")
     parser.add_argument("model_template", help="the model workspace template to load")
     args = parser.parse_args()
 
-    w = r.RooWorkspace("workspace")
+    w = r.RooWorkspace(args.wsname)
 
-    mc = r.RooStats.ModelConfig("ModelConfig", w)
+    mc = r.RooStats.ModelConfig(args.mcname, w)
 
     systematics = {}
     sys_names = []
@@ -41,6 +67,7 @@ if __name__ == "__main__":
                     print "making nuisance param: NP_%s"%sys_name
                     w.factory("NP_%s[-5,5]"%sys_name)
                     w.factory("GLOB_%s[-5,5]"%sys_name)
+                    w.obj("GLOB_%s"%sys_name).setConstant(True)
                     w.factory("Gaussian::constr_{name}(NP_{name},GLOB_{name},1)".format(name=sys_name))
                 
                 for affected_param in items[2:]:
@@ -109,34 +136,34 @@ if __name__ == "__main__":
 
             # create a variable (suffixed with _nominal) to hold the nominal value
             new_definition = l.replace(token_name,"%s_nominal"%token_name)
-            res = w.factory(new_definition)
-            if not res:
-                print>>sys.stderr, "Error on L%d:"%(line_number+1)
-                print>>sys.stderr, new_definition
-                sys.exit(1)
+            res = factory(w,new_definition,line_number+1)
 
             # add an expression that multiplies the nominal value by systematics
             # (or adds the systematic in the case of a bias)
             bias_strs = []
             sys_strs = []
-            np_names = []
+            arg_names = []
             for sys_name,sys_size,sys_type in systematics[token_name]:
-                np_names.append("NP_%s"%sys_name)
+                # make a constant variable to hold the magnitude of the systematic
+                uncert_name = "%s_uncert_%s"%(token_name,sys_name)
+                factory(w,"%s[%g]"%(uncert_name, sys_size))
                 if sys_type == 'bias':
-                    bias_strs.append("%g*NP_%s"%(sys_size,sys_name))
+                    bias_strs.append("%s*NP_%s"%(uncert_name,sys_name))
                 elif sys_type == 'gauss':
-                    sys_strs.append("(1+%g*NP_%s)"%(sys_size,sys_name))
+                    sys_strs.append("(1+%s*NP_%s)"%(uncert_name,sys_name))
                 elif sys_type == 'logn':
-                    sys_strs.append("exp(%g*NP_%s)"%(np.sqrt(np.log(1+sys_size**2)),sys_name))
+                    sys_strs.append("exp(sqrt(log(1+%s*%s))*NP_%s)"%(uncert_name,uncert_name,sys_name))
+                arg_names.append("NP_%s"%sys_name)
+                arg_names.append(uncert_name)
 
             sys_str = "*".join(sys_strs)
             # and define param as the product of the nominal and systematics
             if bias_strs and sys_strs:
-                new_definition = "expr::{name}('({name}_nominal+{biases})*{systs}',{name}_nominal,{np_names})".format(name=token_name,biases='+'.join(bias_strs),systs=sys_str,np_names=','.join(np_names))
+                new_definition = "expr::{name}('({name}_nominal+{biases})*{systs}',{name}_nominal,{arg_names})".format(name=token_name,biases='+'.join(bias_strs),systs=sys_str,arg_names=','.join(arg_names))
             elif bias_strs:
-                new_definition = "expr::{name}('{name}_nominal+{biases}',{name}_nominal,{np_names})".format(name=token_name,biases='+'.join(bias_strs),np_names=','.join(np_names))
+                new_definition = "expr::{name}('{name}_nominal+{biases}',{name}_nominal,{arg_names})".format(name=token_name,biases='+'.join(bias_strs),arg_names=','.join(arg_names))
             else:
-                new_definition = "expr::{name}('{name}_nominal*{systs}',{name}_nominal,{np_names})".format(name=token_name,systs=sys_str,np_names=','.join(np_names))
+                new_definition = "expr::{name}('{name}_nominal*{systs}',{name}_nominal,{arg_names})".format(name=token_name,systs=sys_str,arg_names=','.join(arg_names))
             res = w.factory(new_definition)
             if not res:
                 print>>sys.stderr, "Error on L%d:"%(line_number+1)
@@ -200,18 +227,18 @@ if __name__ == "__main__":
                 wt.setVal(y)
                 ds.add(r.RooArgSet(obs,wt), y)
             getattr(w,'import')(ds)
-    else:
-        # generate datasets, with PoI set to zero
-        poi = w.obj(poi_names[0])
-        poival_orig = poi.getVal()
-        poi.setVal(0)
-        for cat_name in category_names:
-            obs = w.obj(observables[cat_name])
-            pdf = w.obj(model_pdfs[cat_name])
-            ds = pdf.generate(r.RooArgSet(obs))
-            ds.SetName("obsData_%s"%cat_name)
-            getattr(w,'import')(ds)
-        poi.setVal(poival_orig)
+
+    # generate datasets, with PoI set to zero
+    poi = w.obj(poi_names[0])
+    poival_orig = poi.getVal()
+    poi.setVal(0)
+    for cat_name in category_names:
+        obs = w.obj(observables[cat_name])
+        pdf = w.obj(model_pdfs[cat_name])
+        ds = pdf.generate(r.RooArgSet(obs))
+        ds.SetName("pseudoData_%s"%cat_name)
+        getattr(w,'import')(ds)
+    poi.setVal(poival_orig)
 
     new_definition = "category[%s]"%(','.join(category_names))
     res = w.factory(new_definition)
@@ -259,6 +286,8 @@ if __name__ == "__main__":
 
     all_nps = sys_nps + other_nps
 
+    w.defineSet("nonSysParameters", ",".join(other_nps))
+
     # setup the modelconfig
     mc.SetPdf(top_pdf)
     mc.SetParametersOfInterest(','.join(poi_names))
@@ -272,6 +301,9 @@ if __name__ == "__main__":
     #mc.SetConditionalObservables(','.join(cparam_names))
     getattr(w,'import')(mc)
 
+    w.saveSnapshot("nps_init", mc.GetNuisanceParameters())
+    w.saveSnapshot("globs_init", mc.GetGlobalObservables())
+
     if args.stat_only:
         for v in sys_nps+sys_globs:
             w.obj(v).setConstant(True)
@@ -283,34 +315,81 @@ if __name__ == "__main__":
         for muval in (0, 1):
             poi.setVal(muval)
             obs = w.obj(obs_name)
+            nbins = obs.getBins()
+            obs.setBins(800)
             asimov = r.RooStats.AsymptoticCalculator.GenerateAsimovData(w.obj(model_pdfs[cat_name]), r.RooArgSet(obs))
-            asimov.SetName("asimov_mu%d_%s"%(muval,cat_name))
+            asimov.SetName("asimovDataMu%d_%s"%(muval,cat_name))
             getattr(w,'import')(asimov)
+            obs.setBins(nbins)
         poi.setVal(poival_orig)
+
+    if args.profiledata:
+        poi.setVal(0)
+        poi.setConstant(True)
 
     ## and one for the simul pdf
     w.defineSet('observables_plus',','.join(['category']+observables.values()))
     observables_ = w.set("observables_plus")
     poival_orig = poi.getVal()
     for muval in (0, 1):
+        # save the bin numbers for the observables, and termporarily re-set them
+        nbins = {}
+        for cat_name,obs_name in observables.items():
+            nbins[cat_name] = w.obj(obs_name).getBins()
+            w.obj(obs_name).setBins(800)
+
         poi.setVal(muval)
         asimov = r.RooStats.AsymptoticCalculator.GenerateAsimovData(w.obj("pdf_combined"), observables_)
-        asimov.SetName("asimov_mu%d"%muval)
+        asimov.SetName("asimovDataMu%d"%muval)
         getattr(w,'import')(asimov)
+
+        # set observable bin counts back to original vals
+        for cat_name,obs_name in observables.items():
+            w.obj(obs_name).setBins(nbins[cat_name])
     poi.setVal(poival_orig)
     
     # merge the data in each cat into a indexed multi-cat dataset
-    obs_vars = r.RooArgSet(*[w.obj(observables[c]) for c in category_names])
-    #for dstype in ('obsData', 'asimov_mu0', 'asimov_mu1'):
-    for dstype in ('obsData',):
+    for dstype in ('obsData', 'pseudoData',):
+        obs_vars = r.RooArgSet(*[w.obj(observables[c]) for c in category_names])
         ds_args = [r.RooFit.Index(w.obj("category"))]
+        if dstype == 'obsData':
+            if not args.data: continue
+            obs_vars.add(w.obj("wt"))
+            ds_args.append(r.RooFit.WeightVar(w.obj("wt")))
         for cat_name in category_names:
             ds_args += [r.RooFit.Import(cat_name, w.obj("%s_%s"%(dstype,cat_name)))]
         ds_combined = r.RooDataSet(dstype, dstype, obs_vars, *ds_args)
         getattr(w,'import')(ds_combined)
 
-    #top_pdf.fitTo(w.obj("obsData"))
+    poival_orig = poi.getVal()
+    poi.setVal(0)
+    poi.setConstant(True)
+    for i in xrange(10):
+        obs_vars = r.RooArgSet(w.obj("category"),*[w.obj(observables[c]) for c in category_names])
+        ds_again = top_pdf.generate(obs_vars)
+        ds_again.SetName("pdata_%d"%i)
+        getattr(w,'import')(ds_again)
 
+    for inj in args.injection:
+        w.loadSnapshot("nps_init")
+        assignments = inj.split(",")
+        inj_name = ""
+        for assignment in assignments:
+            name,val = assignment.split("=")
+            w.obj(name).setVal(float(val))
+            inj_name += "_%s_%g"%(name, float(val))
+        for i in xrange(20):
+            obs_vars = r.RooArgSet(w.obj("category"),*[w.obj(observables[c]) for c in category_names])
+            ds = top_pdf.generate(obs_vars)
+            ds.SetName("idata_%d"%i+inj_name)
+            getattr(w,'import')(ds)
+
+
+    poi.setVal(poival_orig)
+    poi.setConstant(False)
+
+
+    # import any code that we loaded
     w.importClassCode("*")
     w.Print()
 
